@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace img_traverse{
-    using Byte = uint8_t;
+    using Byte = unsigned char;
 
     struct RawImageData {
         unsigned width; // image width in pixels
@@ -18,7 +18,7 @@ namespace img_traverse{
 
 
     struct PackedData{
-        std::string fmt;
+        std::string ext;
         unsigned width; // image width in pixels
         unsigned height; // image height in pixels
         std::vector<Byte> emptyRowIndices;
@@ -38,7 +38,7 @@ namespace img_traverse{
         static constexpr int PACKED_BLACK = 0b10;
         static constexpr int PACKED_OTHER = 0b11;
     public:
-        static PackedData pack(RawImageData const& data, std::string const& fmt);
+        static PackedData pack(RawImageData const& data, std::string const& ext);
         static bool unpack( RawImageData& data, PackedData const& pd );
     };
 
@@ -46,6 +46,6 @@ namespace img_traverse{
     class Serializer{
     public:
         static void write( PackedData const& data, std::string const& filename );
-        static void read( PackedData& data, std::string const& filename );
+        static bool read( PackedData& data, std::string const& filename );
     };
 }// namespace img_traverse

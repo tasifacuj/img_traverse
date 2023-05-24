@@ -9,9 +9,9 @@
 
 namespace img_traverse{
 
-PackedData ImageHelper::pack( RawImageData const& data, std::string const& fmt ){
+PackedData ImageHelper::pack(RawImageData const& data, std::string const& ext ){
     PackedData pd;
-    pd.fmt = fmt;
+    pd.ext = ext;
     pd.width = data.width;
     pd.height = data.height;
 
@@ -83,7 +83,7 @@ bool ImageHelper::unpack( RawImageData& data, PackedData const& pd ){
             }
                 break;
             default:
-                assert( 0 && "Never should be here" );
+                return false;
             }
         }
 
@@ -96,7 +96,7 @@ bool ImageHelper::unpack( RawImageData& data, PackedData const& pd ){
 template<typename Visitor>
 void visit( Visitor& visitor, PackedData& pd) {
     serialize::makeVisitor("PackedData", visitor)
-        .field(pd.fmt)
+        .field(pd.ext)
         .field(pd.width)
         .field( pd.height)
         .field(pd.emptyRowIndices )
@@ -107,7 +107,7 @@ void visit( Visitor& visitor, PackedData& pd) {
 template<typename Visitor>
 void visit( Visitor& visitor, PackedData const& pd) {
     serialize::makeVisitor("PackedData", visitor)
-        .field(pd.fmt)
+        .field(pd.ext)
         .field( pd.width)
         .field(pd.height)
         .field( pd.emptyRowIndices )
@@ -124,7 +124,7 @@ void Serializer::write( PackedData const& data, std::string const& filename ){
     oustrm << buf.str();
 }
 
-void Serializer::read( PackedData& data, std::string const& filename ){
+bool Serializer::read( PackedData& data, std::string const& filename ){
     std::ifstream instrm( filename.c_str(), std::ios_base::binary );
     std::stringstream strm;
     strm << instrm.rdbuf();
@@ -135,7 +135,10 @@ void Serializer::read( PackedData& data, std::string const& filename ){
 
     if(errs.size() > 0){
         qDebug() << "READ ERR:" << errs.c_str();
+        return false;
     }
+
+    return true;
 }
 
 }// namespace img_traverse

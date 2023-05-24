@@ -32,7 +32,7 @@ static void test_pack_unpack(){
 }
 
 static bool operator == ( PackedData const& lhs, PackedData const& rhs ){
-    return lhs.fmt == rhs.fmt
+    return lhs.ext == rhs.ext
         && lhs.width == rhs.width
         && lhs.height == rhs.height
         && lhs.rows == rhs.rows
