@@ -117,11 +117,9 @@ void visit( Visitor& visitor, PackedData const& pd) {
 
 
 void Serializer::write( PackedData const& data, std::string const& filename ){
-    std::stringbuf buf;
-    serialize::BinaryWriter writer( buf );
-    visit( writer, data );
     std::ofstream oustrm( filename.c_str(), std::ios_base::binary );
-    oustrm << buf.str();
+    serialize::BinaryWriter writer( oustrm );
+    visit( writer, data );
     oustrm .flush();
 }
 

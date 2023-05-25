@@ -27,25 +27,25 @@ namespace img_traverse{
 
 
         struct BinaryWriter {
-            std::streambuf& out;
-            BinaryWriter(std::streambuf& out_): out(out_) {}
+            std::ostream& out_;
+            BinaryWriter(std::ostream& o): out_(o) {}
         };
 
         // https://developers.google.com/protocol-buffers/docs/encoding?hl=en#signed-integers
-        inline void write_unsigned_int(std::streambuf& out, uint64_t value) {
+        inline void write_unsigned_int(std::ostream& out, uint64_t value) {
             do {
                 uint8_t c = value & 0x7f;
                 value >>= 7;
                 if (value) c |= 0x80;
-                out.sputc(c);
+                out.put(c);
             } while(value);
         }
 
 
         inline void visit(BinaryWriter& writer, const std::string& string) {
             uint64_t size = string.size();
-            write_unsigned_int(writer.out, size);
-            writer.out.sputn(&string[0], size);
+            write_unsigned_int(writer.out_, size);
+            writer.out_.write(&string[0], size);
         }
 
 
@@ -53,19 +53,19 @@ namespace img_traverse{
         inline std::enable_if_t<std::is_arithmetic_v<T> && !std::is_signed_v<T>>
             visit(BinaryWriter& writer, const T& value) {
             uint64_t wide_value = uint64_t(value);
-            write_unsigned_int(writer.out, wide_value);
+            write_unsigned_int(writer.out_, wide_value);
         }
 
 
         inline void visit(BinaryWriter& writer, bool value) {
             uint64_t wide_value = uint64_t(value);
-            write_unsigned_int(writer.out, wide_value);
+            write_unsigned_int(writer.out_, wide_value);
         }
 
         template<typename T>
         inline void visit(BinaryWriter& writer, std::vector< T > const& vector) {
             uint64_t size = vector.size();
-            write_unsigned_int(writer.out, size);
+            write_unsigned_int(writer.out_, size);
 
             for (auto const& element : vector) {
                 visit(writer, element);
@@ -106,7 +106,7 @@ namespace img_traverse{
         inline void visit(BinaryReader& reader, std::string& string) {
             uint64_t size = 0;
             if (!read_unsigned_int(reader.in, size)) {
-                reader.errors << "Error: not enough data in buffer to read string size\n";
+                reader.errors << "Error: failed to read string size\n";
                 return;
             }
 
@@ -117,17 +117,17 @@ namespace img_traverse{
 
             while ( bytes_remaining > 0 && reader.in.sgetc() != std::streambuf::traits_type::eof() ) {
                 size_t bytes_to_read = std::min(bytes_remaining, buffersize);
-                size_t bytes_actually_read = reader.in.sgetn(buffer, bytes_to_read);
-                string.append(buffer, buffer + bytes_actually_read);
+                size_t bytesRead = reader.in.sgetn(buffer, bytes_to_read);
+                string.append(buffer, buffer + bytesRead);
 
-                if (bytes_actually_read < bytes_to_read) {
+                if (bytesRead < bytes_to_read) {
                     reader.errors << "Error: expected " << size
                                   << " bytes in string but only found "
-                                  << (string.size() + bytes_actually_read) << "\n";
+                                  << (string.size() + bytesRead) << "\n";
                     return;
                 }
 
-                bytes_remaining -= bytes_actually_read;
+                bytes_remaining -= bytesRead;
             }
         }
 
@@ -139,7 +139,7 @@ namespace img_traverse{
             uint64_t v;
 
             if (!read_unsigned_int(reader.in, v)) {
-                reader.errors << "Error: not enough data in buffer to read number\n";
+                reader.errors << "Error: failed to read number\n";
                 return;
             }
 
@@ -150,7 +150,7 @@ namespace img_traverse{
             uint64_t v;
 
             if ( !read_unsigned_int( reader.in, v ) ) {
-                reader.errors << "Error: not enough data in buffer to read bool\n";
+                reader.errors << "Error: failed read bool\n";
                 return;
             }
 
@@ -162,7 +162,7 @@ namespace img_traverse{
             uint64_t i = 0, size = 0;
 
             if (!read_unsigned_int(reader.in, size)) {
-                reader.errors << "Error: not enough data in buffer to read vector size\n";
+                reader.errors << "Error: failed to read vector size\n";
                 return;
             }
 
