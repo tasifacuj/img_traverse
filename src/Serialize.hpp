@@ -26,9 +26,9 @@ namespace img_traverse{
         }
 
 
-        struct BinarySerialize {
+        struct BinaryWriter {
             std::streambuf& out;
-            BinarySerialize(std::streambuf& out_): out(out_) {}
+            BinaryWriter(std::streambuf& out_): out(out_) {}
         };
 
         // https://developers.google.com/protocol-buffers/docs/encoding?hl=en#signed-integers
@@ -42,7 +42,7 @@ namespace img_traverse{
         }
 
 
-        inline void visit(BinarySerialize& writer, const std::string& string) {
+        inline void visit(BinaryWriter& writer, const std::string& string) {
             uint64_t size = string.size();
             write_unsigned_int(writer.out, size);
             writer.out.sputn(&string[0], size);
@@ -51,19 +51,19 @@ namespace img_traverse{
 
         template<typename T>
         inline std::enable_if_t<std::is_arithmetic_v<T> && !std::is_signed_v<T>>
-            visit(BinarySerialize& writer, const T& value) {
+            visit(BinaryWriter& writer, const T& value) {
             uint64_t wide_value = uint64_t(value);
             write_unsigned_int(writer.out, wide_value);
         }
 
 
-        inline void visit(BinarySerialize& writer, bool value) {
+        inline void visit(BinaryWriter& writer, bool value) {
             uint64_t wide_value = uint64_t(value);
             write_unsigned_int(writer.out, wide_value);
         }
 
         template<typename T>
-        inline void visit(BinarySerialize& writer, std::vector< T > const& vector) {
+        inline void visit(BinaryWriter& writer, std::vector< T > const& vector) {
             uint64_t size = vector.size();
             write_unsigned_int(writer.out, size);
 
@@ -73,12 +73,12 @@ namespace img_traverse{
         }
 
     //-------------------------------------- deserialize ----------------------------------------------------//
-        struct BinaryDeserialize {
+        struct BinaryReader {
             std::streambuf& in;
             std::stringstream errors;
-            BinaryDeserialize(std::streambuf& buf): in(buf) {}
+            BinaryReader(std::streambuf& buf): in(buf) {}
 
-            std::string Errors() { return errors.str(); }
+            std::string getErrors() { return errors.str(); }
         };
 
         inline bool read_unsigned_int(std::streambuf& in, uint64_t& value) {
@@ -103,7 +103,7 @@ namespace img_traverse{
             return true;
         }
 
-        inline void visit(BinaryDeserialize& reader, std::string& string) {
+        inline void visit(BinaryReader& reader, std::string& string) {
             uint64_t size = 0;
             if (!read_unsigned_int(reader.in, size)) {
                 reader.errors << "Error: not enough data in buffer to read string size\n";
@@ -135,7 +135,7 @@ namespace img_traverse{
 
         template<typename T>
         inline std::enable_if_t<std::is_arithmetic_v<T> && !std::is_signed_v<T>>
-            visit(BinaryDeserialize& reader, T& value) {
+            visit(BinaryReader& reader, T& value) {
             uint64_t v;
 
             if (!read_unsigned_int(reader.in, v)) {
@@ -146,7 +146,7 @@ namespace img_traverse{
             value = static_cast<T>(v);
         }
 
-        inline void visit(BinaryDeserialize& reader, bool& value) {
+        inline void visit(BinaryReader& reader, bool& value) {
             uint64_t v;
 
             if ( !read_unsigned_int( reader.in, v ) ) {
@@ -158,7 +158,7 @@ namespace img_traverse{
         }
 
         template<typename T>
-        inline void visit(BinaryDeserialize& reader, std::vector<T>& vector) {
+        inline void visit(BinaryReader& reader, std::vector<T>& vector) {
             uint64_t i = 0, size = 0;
 
             if (!read_unsigned_int(reader.in, size)) {

@@ -118,20 +118,21 @@ void visit( Visitor& visitor, PackedData const& pd) {
 
 void Serializer::write( PackedData const& data, std::string const& filename ){
     std::stringbuf buf;
-    serialize::BinarySerialize writer( buf );
+    serialize::BinaryWriter writer( buf );
     visit( writer, data );
     std::ofstream oustrm( filename.c_str(), std::ios_base::binary );
     oustrm << buf.str();
+    oustrm .flush();
 }
 
 bool Serializer::read( PackedData& data, std::string const& filename ){
     std::ifstream instrm( filename.c_str(), std::ios_base::binary );
     std::stringstream strm;
     strm << instrm.rdbuf();
-    serialize::BinaryDeserialize reader( *strm.rdbuf() );
+    serialize::BinaryReader reader( *strm.rdbuf() );
     visit( reader, data);
 
-    const std::string& errs = reader.Errors();
+    const std::string& errs = reader.getErrors();
 
     if(errs.size() > 0){
         qDebug() << "READ ERR:" << errs.c_str();
