@@ -25,7 +25,7 @@ namespace img_traverse{
         std::vector< ByteArray > rows;
     };
     /*
-     * string, unsigned int,  bool, vector<bool>, uint8_t, vector<uint8_t>, vector<vector<uint8_t>>
+     * @brief class that packs raw image bits into compressed bits and unpacks backward
      */
 
     class ImageHelper{
@@ -38,11 +38,24 @@ namespace img_traverse{
         static constexpr int PACKED_BLACK = 0b10;
         static constexpr int PACKED_OTHER = 0b11;
     public:
+        /*
+         * @param data raw image bits
+         * @param ext image type
+         * @return packed image
+         */
         static PackedData pack(RawImageData const& data, std::string const& ext);
+
+        /*
+         * @param data place where to unpack bits
+         * @param pd compressed image bits
+         * @return success or failure
+         */
         static bool unpack( RawImageData& data, PackedData const& pd );
     };
 
-
+    /*
+     * @brief file serialzier, that writes packed image into file
+     */
     class Serializer{
     public:
         static void write( PackedData const& data, std::string const& filename );

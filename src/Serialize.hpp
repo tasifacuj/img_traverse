@@ -32,6 +32,8 @@ namespace img_traverse{
         };
 
         // https://developers.google.com/protocol-buffers/docs/encoding?hl=en#signed-integers
+        // 0b111 ==> 0b00000111
+        // 0b1111111100000000 ==> 0b10000000 0b11111110 0b00000011
         inline void write_unsigned_int(std::ostream& out, uint64_t value) {
             do {
                 uint8_t c = value & 0x7f;
